@@ -1,0 +1,22 @@
+{
+  "usuarios": [
+    {
+      "id": 1,
+      "nome": "mateus",
+      "email": "mateus@email.com",
+      "telefone": "+5512355556"
+    },
+    {
+      "id": 2,
+      "nome": "tiago amaro da silva",
+      "email": "tiagoamaro@gmail.com",
+      "telefone": "149987722211"
+    },
+    {
+      "id": 3,
+      "nome": "andre amaro",
+      "email": "andreamaro@gmail.com",
+      "telefone": "+5512355556"
+    }
+  ]
+}

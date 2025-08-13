@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Cadastro de Usuários</title>
+  
+  <style>
+    :root {
+      --bg: #0b1020; --card:#121933; --muted:#96a0c3; --text:#e7ecff; --primary:#6ea8fe; --accent:#22d3ee; --danger:#ef4444; --ok:#22c55e;
+    }
+    *{box-sizing:border-box} body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Arial,sans-serif;background:linear-gradient(120deg,#0b1020,#0f1530);} 
+    .container{max-width:960px;margin:40px auto;padding:0 16px;color:var(--text)}
+    header{display:flex;gap:12px;align-items:center;margin-bottom:20px}
+    h1{font-size:clamp(22px,3vw,34px);margin:0}
+    .card{background:var(--card);border:1px solid #212a51;border-radius:16px;padding:16px;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+    .grid{display:grid;gap:16px}
+    .grid-2{grid-template-columns:1fr 1fr}
+    .label{font-size:12px;color:var(--muted);margin-bottom:6px}
+    input{width:100%;padding:12px 14px;background:#0c1430;border:1px solid #2a3566;border-radius:12px;color:var(--text);outline:none}
+    input::placeholder{color:#6c78a8}
+    button{border:0;padding:12px 16px;border-radius:12px;cursor:pointer;font-weight:600}
+    .btn{background:linear-gradient(135deg,var(--primary),#8ab4ff);color:#0a1022;box-shadow:0 8px 20px rgba(110,168,254,.25)}
+    .btn:active{transform:translateY(1px)}
+    .btn-outline{background:transparent;color:var(--text);border:1px solid #2a3566}
+    .toolbar{display:flex;gap:8px;align-items:center;justify-content:space-between;margin:12px 0 0}
+    table{width:100%;border-collapse:collapse;margin-top:10px}
+    th,td{padding:12px;border-bottom:1px solid #222c57}
+    th{color:#a9b4db;text-align:left;font-weight:600}
+    .row-actions{display:flex;gap:8px}
+    .chip{display:inline-flex;gap:8px;align-items:center;padding:8px 12px;border-radius:999px;background:#0b1330;border:1px solid #223064;color:#a8b2df}
+    .toast{position:fixed;right:16px;bottom:16px;background:#0c1430;border:1px solid #223064;color:var(--text);padding:12px 14px;border-radius:12px;opacity:0;transform:translateY(10px);transition:.3s;box-shadow:0 8px 24px rgba(0,0,0,.35)}
+    .toast.show{opacity:1;transform:translateY(0)}
+    .toast.ok{border-color:#1d8348}
+    .toast.err{border-color:var(--danger)}
+    .small{font-size:12px;color:#9aa6d8}
+    .muted{color:var(--muted)}
+    .empty{padding:20px;border:1px dashed #263466;border-radius:12px;text-align:center;color:#9aa6d8}
+    @media (max-width:720px){.grid-2{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <svg width="34" height="34" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 12c2.761 0 5-2.239 5-5S14.761 2 12 2 7 4.239 7 7s2.239 5 5 5Zm0 2c-4.418 0-8 2.239-8 5v2h16v-2c0-2.761-3.582-5-8-5Z" fill="#8ab4ff"/></svg>
+      <h1>Cadastro de Usuários</h1>
+      <span class="chip" id="apiStatus">API: verificando...</span>
+    </header>
+
+    <div class="card" style="margin-bottom:16px">
+      <div class="grid grid-2">
+        <div>
+          <div class="label">Nome</div>
+          <input id="nome" placeholder="Ex.: Mateus Amaro" autocomplete="name" />
+        </div>
+        <div>
+          <div class="label">E-mail</div>
+          <input id="email" placeholder="Ex.: mateus@email.com" autocomplete="email" />
+        </div>
+        <div>
+          <div class="label">Telefone</div>
+          <input id="telefone" placeholder="Ex.: (11) 99999-0000" autocomplete="tel" />
+        </div>
+      </div>
+      <div class="toolbar">
+        <div class="small muted">Os campos são obrigatórios. O <b>id</b> é gerado automaticamente.</div>
+        <div style="display:flex;gap:8px">
+          <button class="btn-outline" id="limpar">Limpar</button>
+          <button class="btn" id="salvar">Salvar usuário</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+        <h2 style="margin:0;font-size:18px;color:#c9d4ff">Lista de usuários</h2>
+        <div style="display:flex;gap:8px">
+          <button class="btn-outline" id="recarregar">Recarregar</button>
+        </div>
+      </div>
+      <table id="tabela">
+        <thead>
+          <tr><th style="width:80px">ID</th><th>Nome</th><th>E-mail</th><th>Telefone</th><th style="width:130px">Ações</th></tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+      <div id="vazio" class="empty" style="display:none">Nenhum usuário cadastrado ainda.</div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const API = localStorage.getItem('apiBase') || 'http://localhost:3000';
+
+    function toast(msg, ok=true){
+      const el = document.getElementById('toast');
+      el.textContent = msg; el.className = 'toast ' + (ok ? 'ok' : 'err');
+      requestAnimationFrame(()=>{ el.classList.add('show'); setTimeout(()=> el.classList.remove('show'), 2200); });
+    }
+
+    async function ping(){
+      const status = document.getElementById('apiStatus');
+      try{
+        const res = await fetch(API + '/');
+        if(!res.ok) throw new Error('offline');
+        status.textContent = 'API: online';
+        status.style.borderColor = '#1d8348';
+      }catch(err){
+        status.textContent = 'API: offline';
+        status.style.borderColor = '#ef4444';
+      }
+    }
+
+    function rowTemplate(u){
+      return `
+        <tr>
+          <td>#${u.id}</td>
+          <td>${u.nome}</td>
+          <td>${u.email}</td>
+          <td>${u.telefone}</td>
+          <td>
+            <div class="row-actions">
+              <button class="btn-outline" onclick="removeUser(${u.id})">Excluir</button>
+            </div>
+          </td>
+        </tr>`;
+    }
+
+    async function loadUsers(){
+      try{
+        const res = await fetch(API + '/usuarios');
+        const data = await res.json();
+        console.log('Usuários carregados:', data);
+        const tbody = document.getElementById('tbody');
+        tbody.innerHTML = data.map(rowTemplate).join('');
+        document.getElementById('vazio').style.display = data.length ? 'none' : 'block';
+      }catch(err){
+        toast('Não foi possível carregar usuários', false);
+      }
+    }
+
+    async function addUser(){
+      const nome = document.getElementById('nome').value.trim();
+      const email = document.getElementById('email').value.trim();
+      const telefone = document.getElementById('telefone').value.trim();
+      if(!nome || !email || !telefone){ toast('Preencha todos os campos', false); return; }
+      try{
+        const res = await fetch(API + '/usuarios', {
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({ nome, email, telefone })
+        });
+        const json = await res.json();
+        if(!res.ok){ throw new Error(json.erro || 'Erro'); }
+        document.getElementById('nome').value='';
+        document.getElementById('email').value='';
+        document.getElementById('telefone').value='';
+        toast('Usuário cadastrado com sucesso');
+        loadUsers();
+      }catch(err){ toast(err.message, false); }
+    }
+
+    async function removeUser(id){
+      if(!confirm('Deseja excluir o usuário #' + id + '?')) return;
+      try{
+        const res = await fetch(API + '/usuarios/' + id, { method:'DELETE' });
+        if(!res.ok){ const j = await res.json(); throw new Error(j.erro || 'Erro ao excluir'); }
+        toast('Usuário excluído');
+        loadUsers();
+      }catch(err){ toast(err.message, false); }
+    }
+
+    document.getElementById('salvar').addEventListener('click', addUser);
+    document.getElementById('limpar').addEventListener('click', ()=>{ nome.value=''; email.value=''; telefone.value=''; nome.focus(); });
+    document.getElementById('recarregar').addEventListener('click', loadUsers);
+
+    ping();
+    loadUsers();
+  </script>
+</body>
+</html>
+
