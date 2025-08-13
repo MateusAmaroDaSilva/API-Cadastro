@@ -150,10 +150,10 @@ O projeto inclui um frontend simples (`frontend.html`) para cadastrar e visualiz
 - Botões para limpar formulário, salvar usuário e recarregar a lista.
 - Mensagens de feedback aparecem como **toasts
 **Exemplo de uso no browser**:
-  1. Abra o arquivo `frontend.html`.
-  2. Preencha o formulário com os dados do usuário.
-  3. Clique em **Salvar usuário**.
-  4. A tabela será atualizada automaticamente.
+1.  Abra o arquivo `frontend.html`.
+2.  Preencha o formulário com os dados do usuário.
+3.  Clique em **Salvar usuário**.
+4.  A tabela será atualizada automaticamente.
 
 ---
 
