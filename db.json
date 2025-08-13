@@ -2,15 +2,9 @@
   "usuarios": [
     {
       "id": 1,
-      "nome": "vitoraraujo",
-      "email": "vitoraraujo@gmail.com",
-      "telefone": "14998557290"
-    },
-    {
-      "id": 2,
-      "nome": "mateus",
-      "email": "amaro@gmail.com",
-      "telefone": "149985552051"
+      "nome": "maria",
+      "email": "maria@gmail.com",
+      "telefone": "14998553214"
     }
   ]
 }
